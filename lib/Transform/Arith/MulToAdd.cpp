@@ -13,6 +13,7 @@ namespace tutorial {
 using arith::AddIOp;
 using arith::ConstantOp;
 using arith::MulIOp;
+using arith::ShLIOp;
 
 // Replace y = C*x with y = C/2*x + C/2*x, when C is a power of 2, otherwise do
 // nothing.
@@ -42,11 +43,10 @@ struct PowerOfTwoExpand : public OpRewritePattern<MulIOp> {
 
     ConstantOp newConstant = rewriter.create<ConstantOp>(
         rhsDefiningOp.getLoc(),
-        rewriter.getIntegerAttr(rhs.getType(), value / 2));
-    MulIOp newMul = rewriter.create<MulIOp>(op.getLoc(), lhs, newConstant);
-    AddIOp newAdd = rewriter.create<AddIOp>(op.getLoc(), newMul, newMul);
+        rewriter.getIntegerAttr(rhs.getType(), __builtin_ctz(value)));
+    ShLIOp newShL = rewriter.create<ShLIOp>(op.getLoc(), lhs, newConstant);
 
-    rewriter.replaceOp(op, newAdd);
+    rewriter.replaceOp(op, newShL);
     rewriter.eraseOp(rhsDefiningOp);
 
     return success();
